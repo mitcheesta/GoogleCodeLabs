@@ -50,9 +50,16 @@
     var selected = select.options[select.selectedIndex];
     var key = selected.value;
     var label = selected.textContent;
-    // TODO init the app.selectedCities array here
+
+    if(!app.selectedCities){ //if selectedCities array doesn't already exist, create it
+      app.selectedCities = [];
+    }
+
     app.getForecast(key, label);
-    // TODO push the selected city to the array and save here
+
+    app.selectedCities.push({key: key, label: label}); //push city into the selectedCities array as associative key-value pair
+    app.saveSelectedCities();
+
     app.toggleAddDialog(false);
   });
 
@@ -196,7 +203,13 @@
     });
   };
 
-  // TODO add saveSelectedCities function here
+  //Save list of cities to localStorage
+    //tells app for which cities to grab data
+  app.saveSelectedCities = function(){
+    var selectedCities = JSON.stringify(app.selectedCities); //convert JS to JSON string
+    localStorage.selectedCities = selectedCities;
+  }
+
 
   app.getIconClass = function(weatherCode) {
     // Weather codes: https://developer.yahoo.com/weather/documentation.html#codes
@@ -306,6 +319,32 @@
   //app.updateForecastCard(initialWeatherForecast);
 
   // TODO add startup code here
+  
+  /** Code required to start the app
+   * 
+   *  NOTE: Currently set to use localStorage for simplicit's sake but shouldn't be used for production.
+   *    Instead, should use IDB (npm) or SimpleDB (GitHub).
+   */
+
+  app.selectedCities = localStorage.selectedCities;
+  if(app.selectedCities) {
+    app.selectedCities = JSON.parse(app.selectedCities); //reads the JSON for user's saved cities from localStorage
+    app.selectedCities.forEach(function(city){ //gets forecase for each saved city
+      app.getForecast(city.key, city.label);
+    })
+  } else{
+    /** If app used for first time or user has not saved cities. 
+     *  We will just display fake data but a production app would obtain the user's location (perhaps using IP lookup), 
+     *  get the forecase for that area, then insert that data into the page. 
+     */
+
+     app.updateForecastCard(initialWeatherForecast);
+     app.selectedCities = [
+       {key: initialWeatherForecast.key, label: initialWeatherForecast.label }
+     ];
+     app.saveSelectedCities();
+  }
+
 
   // TODO add service worker code here
 })();
