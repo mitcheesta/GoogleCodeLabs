@@ -1,3 +1,5 @@
+#Note: Currently broken because it implements a Yahoo Weather API that retired on Jan. 3, 2019
+
 # Your first Progressive Web App Code Lab
 
 These are the resource files needed for the [Your first Progressive Web App](https://codelabs.developers.google.com/codelabs/your-first-pwapp/)
