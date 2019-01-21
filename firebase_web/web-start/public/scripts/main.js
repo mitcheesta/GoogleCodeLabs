@@ -17,42 +17,74 @@
 
 // Signs-in Friendly Chat.
 function signIn() {
-  // TODO 1: Sign in Firebase with credential from the Google user.
+  //Sign in Firebase with credential from the Google user.
+  var provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider); //causes a pop-up to appear with content for Google log-in
 }
 
 // Signs-out of Friendly Chat.
 function signOut() {
-  // TODO 2: Sign out of Firebase.
+  //Sign out of Firebase.
+  firebase.auth().signOut(); //call the signOut() method from firebase's auth()
 }
 
 // Initiate firebase auth.
 function initFirebaseAuth() {
-  // TODO 3: Initialize Firebase.
+  firebase.auth().onAuthStateChanged(authStateObserver); //triggers during an authentication state change (i.e. login/logout)
 }
+
+//return pic and name from firebase.auth().currentUser
 
 // Returns the signed-in user's profile Pic URL.
 function getProfilePicUrl() {
-  // TODO 4: Return the user's profile pic URL.
+  return firebase.auth().currentUser.photoURL || '/images/profile_placeholder.png';
 }
 
 // Returns the signed-in user's display name.
 function getUserName() {
-  // TODO 5: Return the user's display name.
+  return firebase.auth().currentUser.displayName;
 }
 
 // Returns true if a user is signed-in.
 function isUserSignedIn() {
-  // TODO 6: Return true if a user is signed-in.
+  return !!firebase.auth().currentUser;
 }
 
 // Saves a new message on the Firebase DB.
 function saveMessage(messageText) {
-  // TODO 7: Push a new message to Firebase.
+  return firebase.firestore().collection('messages').add({
+    name: getUserName(),
+    text: messageText,
+    profilePicUrl: getProfilePicUrl(),
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(function(error) { //if error encountered
+    console.error('Error writing new message to Firebase Database');
+  });
 }
 
 // Loads chat messages history and listens for upcoming ones.
 function loadMessages() {
-  // TODO 8: Load and listens for new messages.
+  //create query to load last 12 messages and listen for new ones
+  var query = firebase.firestore()
+    .collection('messages') //specifies which collection (i.e. group) within the db to listen to
+    .orderBy('timestamp', 'desc') //by newest
+    .limit(12); //limits to 12 msgs
+
+   //start listening to query 
+  query.onSnapshot(function(snapshot){ //callback function passed in to .onSnapshot()
+      //called when query matched
+    snapshot.docChanges().forEach(function(change) {
+      if(change.type === 'removed'){
+        deleteMessage(change.doc.id);
+      } 
+      else{
+        //get message from the data
+        var message = change.doc.data();
+        //display message's info
+        displayMessage(change.doc.id, message.timestamp, message.name, message.text, message.profilePicUrl, message.imageUrl);
+      }
+    });
+  });
 }
 
 // Saves a new message containing an image in Firebase.
